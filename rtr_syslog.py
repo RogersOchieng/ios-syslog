@@ -18,18 +18,19 @@ template="""logging host {}
 gw-accounting syslog\n""".format(syslog_host)
 generatedconfig=template
 generatedconfig=generatedconfig.split("\n")
-print (generatedconfig)
 	
 threads = []
-def checkparallel(ip):
+def run_parallel(ip):
 	device = ConnectHandler(device_type='cisco_ios', ip=ip, username=userName, password=passWord)
 	device.send_config_set(generatedconfig)
+	print ("Writing Memory!!!!!!!!!\n")
 	device.send_command("write memory")
 	output = device.send_command("show run | in hostname")
 	output=output.split(" ")
 	hostname=output[1]
+	print ("Configuration Successful! for host {}\n".format(hostname))
 	#perform validations
-	print ("************************************")
+	print ("**************************************************")
 	print ("Performing validation for :",hostname+"\n")
 	output=device.send_command("show logging")
 	if ("encryption disabled, link up"):
@@ -41,7 +42,7 @@ def checkparallel(ip):
 #	else:
 #		print ("Logging not set for informational logs")
 
-	print ("***********************************\n")
+	print ("**************************************************\n")
 
 
 #Checking IP address file and content validity
@@ -72,15 +73,25 @@ def ip_file_valid():
     
     return ip_list
 
-
+def ip_addr_valid(list):
+	for ip in list:
+		ip = ip.rstrip("\n")
+		octet_list = ip.split('.')
+		if (len(octet_list) == 4) and (1 <= int(octet_list[0]) <= 223) and (int(octet_list[0]) != 127) and (int(octet_list[0]) != 169 or int(octet_list[1]) != 254) and (0 <= int(octet_list[1]) <= 255 and 0 <= int(octet_list[2]) <= 255 and 0 <= int(octet_list[3]) <= 255):
+			continue
+             
+		else:
+			print('\n* There was an invalid IP address in the file: {} :(\n'.format(ip))
+			sys.exit()
  		
 ip_list = ip_file_valid()
+verify_ip_list = ip_addr_valid(ip_list)
 
 try:
     
 	for ip in ip_list:
 		ip = ip.rstrip()
-		t = Thread(target=checkparallel, args= (ip,))
+		t = Thread(target=run_parallel, args= (ip,))
 		t.start()
 		threads.append(t)
 
