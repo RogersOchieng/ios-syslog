@@ -23,12 +23,12 @@ threads = []
 def run_parallel(ip):
 	device = ConnectHandler(device_type='cisco_ios', ip=ip, username=userName, password=passWord)
 	device.send_config_set(generatedconfig)
-	print ("Writing Memory!!!!!!!!!\n")
-	device.send_command("write memory")
 	output = device.send_command("show run | in hostname")
 	output=output.split(" ")
 	hostname=output[1]
 	print ("Configuration Successful! for host {}\n".format(hostname))
+	print ("Writing Memory!!!!!!!!!\n")
+	device.send_command("write memory")
 	#perform validations
 	print ("**************************************************")
 	print ("Performing validation for :",hostname+"\n")
